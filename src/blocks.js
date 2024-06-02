@@ -7,7 +7,7 @@ function provideGetContentFunctionJs() {
   this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
   return this.provideFunction_('request_get_content', [
     `const ${this.FUNCTION_NAME_PLACEHOLDER_} = async (path) => {`,
-    `  res = runtime.data['request_response']`,
+    `  const res = runtime.data['request_response']`,
     `  if (!res) return '';`,
     '  let result = await res.json();',
     `  if (!result) return '';`,
@@ -25,7 +25,7 @@ function provideGetTextFunctionJs() {
   this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
   return this.provideFunction_('request_get_text', [
     `const ${this.FUNCTION_NAME_PLACEHOLDER_} = async (path) => {`,
-    `  res = runtime.data['request_response']`,
+    `  const res = runtime.data['request_response']`,
     `  if (!res) return '';`,
     '  return await res.text();',
     '};',
