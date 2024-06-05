@@ -27,7 +27,7 @@ async def fetch_raw(method, url):
 
 
 def fetch(method, url):
-    if runtime.wifi_connected():
+    if runtime.wifi_connected:
         asyncio.create_task(fetch_raw(method, url))
     else:
         runtime.fire(REQUEST_FAILS)
