@@ -3,56 +3,6 @@ import translations from './l10n.yaml';
 import iconURI from './icon.svg';
 import requestPyURI from './request.py';
 
-function provideGetContentFunctionJs() {
-  this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
-  return this.provideFunction_('request_get_content', [
-    `const ${this.FUNCTION_NAME_PLACEHOLDER_} = async (path) => {`,
-    `  const res = runtime.data['request_response']`,
-    `  if (!res) return '';`,
-    '  let result = await res.json();',
-    `  if (!result) return '';`,
-    `  const indexPath = path.split('.');`,
-    '  for (const index of indexPath) {',
-    '    result = Array.isArray(result) ? result.at(+index - 1) : result[index];',
-    `    if (result !== 0 && !result) return '';`,
-    '  }',
-    '  return result;',
-    '};',
-  ]);
-}
-
-function provideGetTextFunctionJs() {
-  this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
-  return this.provideFunction_('request_get_text', [
-    `const ${this.FUNCTION_NAME_PLACEHOLDER_} = async (path) => {`,
-    `  const res = runtime.data['request_response']`,
-    `  if (!res) return '';`,
-    '  return await res.text();',
-    '};',
-  ]);
-}
-
-function provideFetchFunctionJs() {
-  this.definitions_['request_option'] = `runtime.data['request_option'] = {};`;
-  return this.provideFunction_('request_fetch', [
-    `const ${this.FUNCTION_NAME_PLACEHOLDER_} = (method, url) => {`,
-    '  const option = {',
-    `    ...runtime.data['request_option'],`,
-    `    method: method,`,
-    '  };',
-    `  if ((option.method !== 'GET' || option.method !== 'HEAD') && option.body) {`,
-    `    option.body = JSON.stringify(option.body);`,
-    '  }',
-    `  fetch(url, option).then((res) => {`,
-    `    runtime.data['request_response'] = res;`,
-    `    runtime.fire('request_success');`,
-    '  }).catch(() => {',
-    `    runtime.fire('request_fails');`,
-    '  });',
-    '};',
-  ]);
-}
-
 export default {
   iconURI,
   name: (
@@ -104,7 +54,7 @@ export default {
         }
         const method = this.quote_(block.getFieldValue('MOTHOD') || 'GET');
         const url = this.valueToCode(block, 'URL', this.ORDER_NONE) || '""';
-        code += `request.fetch(str(${method}), str(${url}))\n`;
+        code += `await request.afetch(str(${method}), str(${url}))\n`;
         return code;
       },
       vm(block) {
@@ -115,7 +65,7 @@ export default {
         const fetch = provideFetchFunctionJs.call(this);
         const method = this.quote_(block.getFieldValue('MOTHOD') || 'GET');
         const url = this.valueToCode(block, 'URL', this.ORDER_NONE) || '""';
-        code += `${fetch}(String(${method}), String(${url}))`;
+        code += `await ${fetch}(String(${method}), String(${url}));\n`;
         return code;
       },
     },
@@ -137,13 +87,13 @@ export default {
         return code;
       },
       vm() {
-        this.definitions_['request_option'] = `runtime.data['request_option'] = {};`;
+        this.definitions_['request_option'] = `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };`;
         this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
         let code = '';
         if (this.STATEMENT_PREFIX) {
           code += this.injectId(this.STATEMENT_PREFIX, block);
         }
-        code += `runtime.data['request_option'] = {};\n`;
+        code += `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };\n`;
         code += `runtime.data['request_response'] = null;\n`;
         return code;
       },
@@ -307,8 +257,7 @@ export default {
         return code;
       },
       vm(block) {
-        this.definitions_['request_option'] = `runtime.data['request_option'] = {};`;
-        this.definitions_['request_option_headers'] = `runtime.data['request_option']['headers'] = {};`;
+        this.definitions_['request_option'] = `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };`;
         let code = '';
         if (this.STATEMENT_PREFIX) {
           code += this.injectId(this.STATEMENT_PREFIX, block);
@@ -348,8 +297,7 @@ export default {
         return code;
       },
       vm(block) {
-        this.definitions_['request_option'] = `runtime.data['request_option'] = {};`;
-        this.definitions_['request_option_headers'] = `runtime.data['request_option']['headers'] = {};`;
+        this.definitions_['request_option'] = `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };`;
         let code = '';
         if (this.STATEMENT_PREFIX) {
           code += this.injectId(this.STATEMENT_PREFIX, block);
@@ -357,6 +305,47 @@ export default {
         const header = this.valueToCode(block, 'HEADER', this.ORDER_NONE) || '""';
         const value = this.valueToCode(block, 'VALUE', this.ORDER_NONE) || '""';
         code += `runtime.data['request_option']['headers'][${header}] = ${value};\n`;
+        return code;
+      },
+    },
+    {
+      id: 'set_param',
+      text: (
+        <Text
+          id="extension.request.setParam"
+          defaultMessage="set param [KEY] to [VALUE]"
+        />
+      ),
+      inputs: {
+        KEY: {
+          type: 'string',
+          default: 'key',
+        },
+        VALUE: {
+          type: 'string',
+          default: 'value',
+        },
+      },
+      python(block) {
+        this.definitions_['import_extension_request'] = 'from extensions.request import request';
+        let code = '';
+        if (this.STATEMENT_PREFIX) {
+          code += this.injectId(this.STATEMENT_PREFIX, block);
+        }
+        const key = this.valueToCode(block, 'KEY', this.ORDER_NONE) || '""';
+        const value = this.valueToCode(block, 'VALUE', this.ORDER_NONE) || '""';
+        code += `request.set_param(str(${key}), str(${value}))\n`;
+        return code;
+      },
+      vm(block) {
+        this.definitions_['request_option'] = `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };`;
+        let code = '';
+        if (this.STATEMENT_PREFIX) {
+          code += this.injectId(this.STATEMENT_PREFIX, block);
+        }
+        const key = this.valueToCode(block, 'KEY', this.ORDER_NONE) || '""';
+        const value = this.valueToCode(block, 'VALUE', this.ORDER_NONE) || '""';
+        code += `runtime.data['request_option']['params'][${key}] = ${value};\n`;
         return code;
       },
     },
@@ -386,12 +375,11 @@ export default {
         }
         const key = this.valueToCode(block, 'KEY', this.ORDER_NONE) || '""';
         const value = this.valueToCode(block, 'VALUE', this.ORDER_NONE) || '""';
-        code += `request.set_header(str(${key}), str(${value}))\n`;
+        code += `request.set_body(str(${key}), str(${value}))\n`;
         return code;
       },
       vm(block) {
-        this.definitions_['request_option'] = `runtime.data['request_option'] = {};`;
-        this.definitions_['request_option_headers'] = `runtime.data['request_option']['body'] = {};`;
+        this.definitions_['request_option'] = `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };`;
         let code = '';
         if (this.STATEMENT_PREFIX) {
           code += this.injectId(this.STATEMENT_PREFIX, block);
@@ -405,3 +393,70 @@ export default {
   ],
   translations,
 };
+
+function provideGetContentFunctionJs() {
+  this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
+  return this.provideFunction_('request_get_content', [
+    `const ${this.FUNCTION_NAME_PLACEHOLDER_} = async (path) => {`,
+    `  let res = runtime.data['request_response']`,
+    `  if (!res) return '';`,
+    `  if (res instanceof Response) {`,
+    `    res = { json: await res.json(), text: '' };`,
+    `    try {`,
+    `      res.text = JSON.stringify(res.json);`,
+    `    } catch (_) {}`,
+    `    runtime.data['request_response'] = res;`,
+    `  }`,
+    '  let result = res.json;',
+    `  if (!result) return '';`,
+    `  const indexPath = path.split('.');`,
+    '  for (const index of indexPath) {',
+    '    result = Array.isArray(result) ? result.at(+index - 1) : result[index];',
+    `    if (result !== 0 && !result) return '';`,
+    '  }',
+    '  return result;',
+    '};',
+  ]);
+}
+
+function provideGetTextFunctionJs() {
+  this.definitions_['request_response'] = `runtime.data['request_response'] = null;`;
+  return this.provideFunction_('request_get_text', [
+    `const ${this.FUNCTION_NAME_PLACEHOLDER_} = async (path) => {`,
+    `  const res = runtime.data['request_response']`,
+    `  if (!res) return '';`,
+    `  if (res instanceof Response) {`,
+    `    res = { text: await res.text(), json: {} };`,
+    `    try {`,
+    `      res.json = JSON.parse(res.text);`,
+    `    } catch (_) {}`,
+    `    runtime.data['request_response'] = res;`,
+    `  }`,
+    '  return res.text;',
+    '};',
+  ]);
+}
+
+function provideFetchFunctionJs() {
+  this.definitions_['request_option'] = `runtime.data['request_option'] = { body:{}, params:{}, headers:{} };`;
+  return this.provideFunction_('request_fetch', [
+    `const ${this.FUNCTION_NAME_PLACEHOLDER_} = (method, url) => {`,
+    `  const { body, params, headers } = runtime.data['request_option'];`,
+    '  const option = { headers, method };',
+    `  if (params) {`,
+    "    url += `?${Object.entries(params).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')}`;",
+    '  }',
+    `  if ((method !== 'GET' && method !== 'HEAD') && body) {`,
+    `    option.body = JSON.stringify(body);`,
+    '  }',
+    `  return fetch(url, option).then((res) => {`,
+    `    runtime.data['request_response'] = res;`,
+    `    runtime.fire('request_success');`,
+    '  }).catch((e) => {',
+    `    runtime.fire('request_fails');`,
+    '  }).finally(() => {',
+    `    runtime.data['request_option'] = { body:{}, params:{}, headers:{} }`,
+    '  });',
+    '};',
+  ]);
+}
