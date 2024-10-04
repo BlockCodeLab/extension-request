@@ -160,8 +160,8 @@ export default {
       hat: true,
       python() {
         this.definitions_['import_extension_request'] = 'from extensions.request import request';
-        const hatCode = this.hatToCode('request_success', 'target');
-        return `${hatCode}runtime.when(request.REQUEST_SUCCESS, ${this.HAT_FUNCTION_PLACEHOLDER}, target)\n`;
+        const eventCode = this.eventToCode('request_success', 'target');
+        return `@when(request.REQUEST_SUCCESS, target)\n${eventCode}`;
       },
       vm() {
         const hatCode = `async (target, done) => {\ndo {\n${this.HAT_CODE}} while (false);\ndone();\n}`;
@@ -179,8 +179,8 @@ export default {
       hat: true,
       python() {
         this.definitions_['import_extension_request'] = 'from extensions.request import request';
-        const hatCode = this.hatToCode('request_fails');
-        return `${hatCode}runtime.when(request.REQUEST_FAILS, ${this.HAT_FUNCTION_PLACEHOLDER})\n`;
+        const eventCode = this.eventToCode('request_fails');
+        return `@when(request.REQUEST_FAILS)\n${eventCode}`;
       },
       vm() {
         const hatCode = `async (done) => {\ndo {\n${this.HAT_CODE}} while (false);\ndone();\n}`;
