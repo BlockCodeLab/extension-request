@@ -2,7 +2,7 @@ en:
   extension.request.name: Request
   extension.request.request: send [MOTHOD] request to [URL]
   extension.request.getText: text content
-  extension.request.getContent: item [PATH] of content
+  extension.request.getContent: item [PATH] of responds
   extension.request.clearCache: clear request cache
   extension.request.whenResponds: when a site responds
   extension.request.whenFails: when a request fails
@@ -16,9 +16,9 @@ en:
 zh-Hans:
   extension.request.name: 数据请求
   extension.request.request: 用 [MOTHOD] 方法从 [URL] 请求数据
-  extension.request.getText: 数据文本内容
-  extension.request.getContent: 数据中 [PATH] 路径的项目
-  extension.request.clearCache: 清除数据请求缓存
+  extension.request.getText: 文本数据
+  extension.request.getContent: 应答路径 [PATH] 的数据
+  extension.request.clearCache: 清除请求应答缓存
   extension.request.whenResponds: 当网站应答
   extension.request.whenFails: 当请求失败
   extension.request.statusCode: 应答状态码
