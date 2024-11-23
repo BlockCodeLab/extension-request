@@ -160,7 +160,7 @@ export default {
       hat: true,
       python() {
         this.definitions_['import_extension_request'] = 'from extensions.request import request';
-        const eventCode = this.eventToCode('request_success', 'target');
+        const eventCode = this.eventToCode('request_success', 'False', 'target');
         return `@when(request.REQUEST_SUCCESS, target)\n${eventCode}`;
       },
       vm() {
@@ -179,7 +179,7 @@ export default {
       hat: true,
       python() {
         this.definitions_['import_extension_request'] = 'from extensions.request import request';
-        const eventCode = this.eventToCode('request_fails');
+        const eventCode = this.eventToCode('request_fails', 'False');
         return `@when(request.REQUEST_FAILS)\n${eventCode}`;
       },
       vm() {
